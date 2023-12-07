@@ -9,16 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers(options  => 
+builder.Services.AddControllers(options =>
 {
     options.Filters.Add(new ProducesAttribute("application/json"));
     options.Filters.Add(new ConsumesAttribute("application/json"));
 });
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContextPool<IPharmacyDbContext,PharmacyDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("EFConnectionString"),
-        ef => ef.MigrationsAssembly("Nuvem.PharmacyManagement.PharmacyServices")));
+builder.Services.AddDbContextPool<IPharmacyDbContext, PharmacyDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("EFConnectionString"),
+    ef => ef.MigrationsAssembly("Nuvem.PharmacyManagement.PharmacyServices")));
 
 builder.Services.AddSwaggerGen(e => e.EnableAnnotations());
 builder.Services.AddTransient<IPharmacyService, PharmacyService>();
@@ -28,17 +28,26 @@ builder.Configuration.GetSection("ConnectionStrings").Bind(appConfig);
 builder.Services.AddSingleton(appConfig);
 
 var allowUrls = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
+
 builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(policy =>
-                {
-                    if(allowUrls is not null)
-                    {
-                    policy.WithOrigins(allowUrls)
-                        .WithMethods("GET", "POST", "PUT");
-                    }
-                });
-            });
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        if (allowUrls is not null)
+        {
+            policy.WithOrigins(allowUrls)
+                .WithMethods("GET", "POST", "PUT");
+        }
+    });
+
+    options.AddPolicy("AllowSpecificOrigins", builder =>
+    {
+        builder
+            .WithOrigins(allowUrls)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -51,10 +60,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseRouting();
+
+app.UseCors("AllowSpecificOrigins");
+
 app.UseAuthorization();
-
-
-app.UseCors();
 app.MapControllers();
 
 app.Run();

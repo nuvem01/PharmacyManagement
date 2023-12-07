@@ -1,0 +1,24 @@
+.details-container {
+    max-width: 500px;  
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .details-heading {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .details-item {
+    margin-bottom: 15px;
+  }
+  
+  .details-label {
+    font-weight: bold;
+  }  
+
+  
